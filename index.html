@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dino Game Simple</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #ecf0f1;
+      font-family: Arial, sans-serif;
+    }#game {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  background: #bdc3c7;
+  border-bottom: 4px solid #2c3e50;
+  overflow: hidden;
+}
+
+#dino {
+  position: absolute;
+  bottom: 20px;
+  left: 50px;
+  width: 40px;
+  height: 40px;
+  background: green;
+}
+
+.obstacle {
+  position: absolute;
+  bottom: 20px;
+  width: 30px;
+  height: 40px;
+  background: gray;
+}
+
+#score, #high-score {
+  position: absolute;
+  top: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+#score {
+  right: 20px;
+}
+
+#high-score {
+  left: 20px;
+}
+
+#game-over, #start-screen {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 28px;
+  font-weight: bold;
+  color: red;
+  display: none;
+  text-align: center;
+}
+
+#start-screen {
+  display: block;
+  color: #2c3e50;
+}
+
+  </style>
+</head>
+<body>
+  <div id="game">
+    <div id="dino"></div>
+    <div id="high-score">High Score: 0</div>
+    <div id="score">Score: 0</div>
+    <div id="game-over">GAME OVER<br>Press R to Restart</div>
+    <div id="start-screen">Press Space or Tap to Start</div>
+  </div>  <script>
+    const dino = document.getElementById("dino");
+    const game = document.getElementById("game");
+    const scoreDisplay = document.getElementById("score");
+    const highScoreDisplay = document.getElementById("high-score");
+    const gameOverText = document.getElementById("game-over");
+    const startScreen = document.getElementById("start-screen");
+
+    let isJumping = false;
+    let jumpHeight = 0;
+    let score = 0;
+    let highScore = localStorage.getItem("dinoHighScore") || 0;
+    let gameOver = false;
+    let speed = 5; // kecepatan awal obstacle
+    let gameStarted = false;
+
+    highScoreDisplay.textContent = "High Score: " + highScore;
+
+    function jump() {
+      if (isJumping) return;
+      isJumping = true;
+      let upInterval = setInterval(() => {
+        if (jumpHeight >= 70) { // tinggi lompat dikurangi supaya lebih cepat sampai puncak
+          clearInterval(upInterval);
+          let downInterval = setInterval(() => {
+            if (jumpHeight <= 0) {
+              clearInterval(downInterval);
+              isJumping = false;
+            }
+            jumpHeight -= 4; // turun dengan kecepatan sedang
+            dino.style.bottom = 20 + jumpHeight + "px";
+          }, 20);
+        }
+        jumpHeight += 4; // naik dengan kecepatan sedang
+        dino.style.bottom = 20 + jumpHeight + "px";
+      }, 20);
+    }
+
+    function createObstacle() {
+      if (gameOver) return;
+      let obstacle = document.createElement("div");
+      obstacle.classList.add("obstacle");
+      game.appendChild(obstacle);
+      obstacle.style.left = "100%";
+
+      let moveInterval = setInterval(() => {
+        let dinoRect = dino.getBoundingClientRect();
+        let obsRect = obstacle.getBoundingClientRect();
+
+        if (
+          dinoRect.right > obsRect.left &&
+          dinoRect.left < obsRect.right &&
+          dinoRect.bottom > obsRect.top
+        ) {
+          clearInterval(moveInterval);
+          gameOver = true;
+          gameOverText.style.display = "block";
+
+          if (score > highScore) {
+            highScore = score;
+            localStorage.setItem("dinoHighScore", highScore);
+          }
+          highScoreDisplay.textContent = "High Score: " + highScore;
+          return;
+        }
+
+        if (!gameOver) {
+          let currentLeft = parseInt(window.getComputedStyle(obstacle).left);
+          obstacle.style.left = currentLeft - speed + "px";
+
+          if (currentLeft < -50) {
+            obstacle.remove();
+            score++;
+            scoreDisplay.textContent = "Score: " + score;
+
+            if (score % 5 === 0) {
+              speed++;
+            }
+          }
+        }
+      }, 20);
+
+      setTimeout(createObstacle, Math.random() * 2000 + 1000);
+    }
+
+    function startGame() {
+      if (gameStarted) return;
+      gameStarted = true;
+      startScreen.style.display = "none";
+      createObstacle();
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space") {
+        if (!gameStarted) {
+          startGame();
+        }
+        jump();
+      }
+      if (e.code === "KeyR" && gameOver) {
+        location.reload();
+      }
+    });
+
+    document.addEventListener("click", () => {
+      if (!gameStarted) {
+        startGame();
+      }
+      if (!gameOver) jump();
+    });
+  </script></body>
+</html>
