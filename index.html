@@ -3,190 +3,151 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dino Game Simple</title>
+  <title>Game Tangkap Bintang</title>
   <style>
     body {
       margin: 0;
       padding: 0;
-      background: #ecf0f1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(#1e3c72, #2a5298);
       font-family: Arial, sans-serif;
-    }#game {
-  position: relative;
-  width: 100%;
-  height: 300px;
-  background: #bdc3c7;
-  border-bottom: 4px solid #2c3e50;
-  overflow: hidden;
-}
-
-#dino {
-  position: absolute;
-  bottom: 20px;
-  left: 50px;
-  width: 40px;
-  height: 40px;
-  background: green;
-}
-
-.obstacle {
-  position: absolute;
-  bottom: 20px;
-  width: 30px;
-  height: 40px;
-  background: gray;
-}
-
-#score, #high-score {
-  position: absolute;
-  top: 10px;
-  font-size: 18px;
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-#score {
-  right: 20px;
-}
-
-#high-score {
-  left: 20px;
-}
-
-#game-over, #start-screen {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 28px;
-  font-weight: bold;
-  color: red;
-  display: none;
-  text-align: center;
-}
-
-#start-screen {
-  display: block;
-  color: #2c3e50;
-}
-
+    }
+    #game {
+      width: 400px;
+      height: 500px;
+      background: #fff3;
+      border: 2px solid #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    #player {
+      width: 50px;
+      height: 20px;
+      background: #27ae60;
+      position: absolute;
+      bottom: 10px;
+      left: 175px;
+      border-radius: 5px;
+    }
+    .star {
+      width: 20px;
+      height: 20px;
+      background: gold;
+      border-radius: 50%;
+      position: absolute;
+      top: 0;
+    }
+    #score {
+      margin-bottom: 10px;
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px black;
+    }
+    #controls {
+      margin-top: 15px;
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+    }
+    .btn {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      border: none;
+      background: #ecf0f1;
+      font-size: 30px;
+      font-weight: bold;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      cursor: pointer;
+      user-select: none;
+      transition: 0.2s;
+    }
+    .btn:active {
+      transform: scale(0.9);
+      background: #bdc3c7;
+    }
   </style>
 </head>
 <body>
+  <div id="score">Score: 0</div>
   <div id="game">
-    <div id="dino"></div>
-    <div id="high-score">High Score: 0</div>
-    <div id="score">Score: 0</div>
-    <div id="game-over">GAME OVER<br>Press R to Restart</div>
-    <div id="start-screen">Press Space or Tap to Start</div>
-  </div>  <script>
-    const dino = document.getElementById("dino");
+    <div id="player"></div>
+  </div>
+  <div id="controls">
+    <button class="btn" id="left">◀️</button>
+    <button class="btn" id="right">▶️</button>
+  </div>
+
+  <script>
     const game = document.getElementById("game");
+    const player = document.getElementById("player");
     const scoreDisplay = document.getElementById("score");
-    const highScoreDisplay = document.getElementById("high-score");
-    const gameOverText = document.getElementById("game-over");
-    const startScreen = document.getElementById("start-screen");
-
-    let isJumping = false;
-    let jumpHeight = 0;
     let score = 0;
-    let highScore = localStorage.getItem("dinoHighScore") || 0;
-    let gameOver = false;
-    let speed = 5; // kecepatan awal obstacle
-    let gameStarted = false;
+    let playerX = 175;
 
-    highScoreDisplay.textContent = "High Score: " + highScore;
-
-    function jump() {
-      if (isJumping) return;
-      isJumping = true;
-      let upInterval = setInterval(() => {
-        if (jumpHeight >= 70) { // tinggi lompat dikurangi supaya lebih cepat sampai puncak
-          clearInterval(upInterval);
-          let downInterval = setInterval(() => {
-            if (jumpHeight <= 0) {
-              clearInterval(downInterval);
-              isJumping = false;
-            }
-            jumpHeight -= 4; // turun dengan kecepatan sedang
-            dino.style.bottom = 20 + jumpHeight + "px";
-          }, 20);
-        }
-        jumpHeight += 4; // naik dengan kecepatan sedang
-        dino.style.bottom = 20 + jumpHeight + "px";
-      }, 20);
+    function moveLeft() {
+      if (playerX > 0) {
+        playerX -= 20;
+        player.style.left = playerX + "px";
+      }
     }
 
-    function createObstacle() {
-      if (gameOver) return;
-      let obstacle = document.createElement("div");
-      obstacle.classList.add("obstacle");
-      game.appendChild(obstacle);
-      obstacle.style.left = "100%";
+    function moveRight() {
+      if (playerX < 350) {
+        playerX += 20;
+        player.style.left = playerX + "px";
+      }
+    }
 
-      let moveInterval = setInterval(() => {
-        let dinoRect = dino.getBoundingClientRect();
-        let obsRect = obstacle.getBoundingClientRect();
+    // Keyboard control
+    document.addEventListener("keydown", e => {
+      if (e.code === "ArrowLeft") moveLeft();
+      if (e.code === "ArrowRight") moveRight();
+    });
+
+    // Button control (HP)
+    document.getElementById("left").addEventListener("click", moveLeft);
+    document.getElementById("right").addEventListener("click", moveRight);
+
+    function createStar() {
+      const star = document.createElement("div");
+      star.classList.add("star");
+      star.style.left = Math.floor(Math.random() * 380) + "px";
+      game.appendChild(star);
+
+      let fall = setInterval(() => {
+        let top = parseInt(star.style.top || 0);
+        star.style.top = top + 5 + "px";
+
+        // cek kena player
+        const starRect = star.getBoundingClientRect();
+        const playerRect = player.getBoundingClientRect();
 
         if (
-          dinoRect.right > obsRect.left &&
-          dinoRect.left < obsRect.right &&
-          dinoRect.bottom > obsRect.top
+          starRect.bottom >= playerRect.top &&
+          starRect.left < playerRect.right &&
+          starRect.right > playerRect.left
         ) {
-          clearInterval(moveInterval);
-          gameOver = true;
-          gameOverText.style.display = "block";
-
-          if (score > highScore) {
-            highScore = score;
-            localStorage.setItem("dinoHighScore", highScore);
-          }
-          highScoreDisplay.textContent = "High Score: " + highScore;
-          return;
+          score++;
+          scoreDisplay.textContent = "Score: " + score;
+          game.removeChild(star);
+          clearInterval(fall);
         }
 
-        if (!gameOver) {
-          let currentLeft = parseInt(window.getComputedStyle(obstacle).left);
-          obstacle.style.left = currentLeft - speed + "px";
-
-          if (currentLeft < -50) {
-            obstacle.remove();
-            score++;
-            scoreDisplay.textContent = "Score: " + score;
-
-            if (score % 5 === 0) {
-              speed++;
-            }
-          }
+        // jatuh ke bawah
+        if (top > 480) {
+          game.removeChild(star);
+          clearInterval(fall);
         }
-      }, 20);
-
-      setTimeout(createObstacle, Math.random() * 2000 + 1000);
+      }, 50);
     }
 
-    function startGame() {
-      if (gameStarted) return;
-      gameStarted = true;
-      startScreen.style.display = "none";
-      createObstacle();
-    }
-
-    document.addEventListener("keydown", (e) => {
-      if (e.code === "Space") {
-        if (!gameStarted) {
-          startGame();
-        }
-        jump();
-      }
-      if (e.code === "KeyR" && gameOver) {
-        location.reload();
-      }
-    });
-
-    document.addEventListener("click", () => {
-      if (!gameStarted) {
-        startGame();
-      }
-      if (!gameOver) jump();
-    });
-  </script></body>
+    setInterval(createStar, 1200);
+  </script>
+</body>
 </html>
